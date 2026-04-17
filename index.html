@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- ============================================================
+       META TAGS
+       These tell the browser how to display and encode the page.
+       - charset: use UTF-8 so all characters (°, é, etc.) work
+       - viewport: makes the page look good on phones and tablets
+  ============================================================ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- The title that appears on the browser tab -->
+  <title>Weather Dashboard</title>
+
+  <!-- ============================================================
+       GOOGLE FONTS
+       We import two fonts:
+       - "Syne" for headings — geometric, bold, modern
+       - "DM Sans" for body text — clean and very readable
+       Google Fonts is free and loads the fonts from the internet.
+  ============================================================ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- ============================================================
+       CSS STYLES
+       Everything between <style> and </style> controls how the
+       page looks: colours, sizes, spacing, layout, animations.
+  ============================================================ -->
+  <style>
+
+    /* ----------------------------------------------------------
+       CSS CUSTOM PROPERTIES (variables)
+       We define colours and values once here and reuse them
+       everywhere. To change the whole theme, just edit these.
+    ---------------------------------------------------------- */
+    :root {
+      --sky-dark:    #0a0f1e;   /* very dark navy — page background   */
+      --sky-mid:     #111827;   /* slightly lighter navy — card bg     */
+      --sky-border:  #1e2d45;   /* subtle blue-grey — card borders     */
+      --accent:      #38bdf8;   /* sky blue — highlights & icons       */
+      --accent-warm: #fb923c;   /* warm orange — secondary accent      */
+      --text-primary:   #e2e8f0; /* near-white — main text             */
+      --text-secondary: #94a3b8; /* mid-grey — labels & subtitles      */
+      --glass-bg:    rgba(255, 255, 255, 0.04); /* frosted-glass panels */
+      --radius:      16px;      /* rounded corners used everywhere      */
+      --shadow:      0 8px 32px rgba(0, 0, 0, 0.4); /* card shadow     */
+    }
+
+    /* ----------------------------------------------------------
+       RESET & BASE
+       Remove default browser margin/padding and set box-sizing
+       so padding is included in element widths (easier layout).
+    ---------------------------------------------------------- */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ----------------------------------------------------------
+       BODY
+       Set the page background, default font, text colour, and
+       a subtle animated gradient in the background for depth.
+    ---------------------------------------------------------- */
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--sky-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+
+      /* Radial "glow" behind the content — purely decorative */
+      background-image:
+        radial-gradient(ellipse 60% 40% at 50% 0%, rgba(56,189,248,0.08) 0%, transparent 70%);
+    }
+
+    /* ----------------------------------------------------------
+       PAGE WRAPPER (#app)
+       A centred column that holds everything. max-width keeps
+       lines from getting too long on wide screens.
+    ---------------------------------------------------------- */
+    #app {
+      max-width: 860px;
+      margin: 0 auto;         /* centre horizontally */
+      display: flex;
+      flex-direction: column; /* stack children top-to-bottom */
+      gap: 2rem;              /* space between sections */
+    }
+
+    /* ----------------------------------------------------------
+       PAGE TITLE
+       A decorative heading above the search bar.
+    ---------------------------------------------------------- */
+    .page-title {
+      text-align: center;
+    }
+
+    .page-title h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3rem); /* scales with screen */
+      font-weight: 800;
+      letter-spacing: -0.02em;
+
+      /* Gradient text effect */
+      background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-title p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-top: 0.4rem;
+      font-weight: 300;
+    }
+
+    /* =============================================================
+       SECTION 1 — SEARCH
+       The <header> holds the search bar so screen readers and
+       search engines understand this is the page's top controls.
+    ============================================================= */
+    header {
+      width: 100%;
+    }
+
+    /* ----------------------------------------------------------
+       #search-container
+       A flex row that places the input and button side by side.
+       JavaScript uses this id to find the search area.
+    ---------------------------------------------------------- */
+    #search-container {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      background: var(--glass-bg);
+      border: 1px solid var(--sky-border);
+      border-radius: calc(var(--radius) + 4px);
+      padding: 0.5rem 0.5rem 0.5rem 1rem;
+      backdrop-filter: blur(8px); /* frosted glass */
+    }
+
+    /* ----------------------------------------------------------
+       #search-input
+       The text box where the user types a city name.
+       flex: 1 makes it fill all available width.
+    ---------------------------------------------------------- */
+    #search-input {
+      flex: 1;                      /* take up remaining space */
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    /* Placeholder text style */
+    #search-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    /* ----------------------------------------------------------
+       #search-btn
+       The button the user clicks to trigger a search.
+       JavaScript listens for clicks on this id.
+    ---------------------------------------------------------- */
+    #search-btn {
+      background: var(--accent);
+      color: #0a0f1e;               /* dark text on bright button */
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.65rem 1.5rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    #search-btn:hover  { background: #7dd3fc; }
+    #search-btn:active { transform: scale(0.97); }
+
+    /* ----------------------------------------------------------
+       #loading  — shown while weather data is being fetched
+       #error-msg — shown if something goes wrong
+       JavaScript toggles display:none / display:block on these.
+    ---------------------------------------------------------- */
+    #loading {
+      display: none; /* hidden by default; JS shows it when needed */
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      animation: pulse 1.5s infinite;
+    }
+
+    #error-msg {
+      display: none; /* hidden by default; JS shows it on error */
+      text-align: center;
+      color: #f87171;  /* red */
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    /* =============================================================
+       SECTION 2 — CURRENT WEATHER CARD
+       Uses class="weather-card" so CSS can style it.
+       JavaScript fills in the real values by targeting the ids
+       inside: city-name, condition, temperature, wind-speed.
+    ============================================================= */
+    .weather-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--sky-border);
+      border-radius: calc(var(--radius) * 1.5);
+      box-shadow: var(--shadow);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+
+      /* Slide-in animation when page loads */
+      animation: slideUp 0.6s ease both;
+    }
+
+    /* Decorative blurred circle in the top-right corner */
+    .weather-card::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56,189,248,0.15), transparent 70%);
+      pointer-events: none; /* clicks pass through this element */
+    }
+
+    /* City name — JavaScript writes the real name here */
+    #city-name {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Weather condition text, e.g. "Clear sky" */
+    #condition {
+      color: var(--accent);
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* Temperature display */
+    #temperature {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(3rem, 12vw, 6rem);
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 1.2rem;
+
+      /* Gradient text */
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Wind speed, e.g. "Wind: 18 km/h" */
+    #wind-speed {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 300;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.03em;
+    }
+
+    /* Unit toggle button — switches °C ↔ °F */
+    #unit-toggle {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 100px;  /* pill shape */
+      padding: 0.45rem 1.2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    #unit-toggle:hover {
+      background: var(--accent);
+      color: #0a0f1e;
+    }
+
+    /* =============================================================
+       SECTION 3 — 7-DAY FORECAST
+       <section class="forecast-section"> is the wrapper.
+       JavaScript fills #forecast-container with 7 small cards.
+    ============================================================= */
+    .forecast-section,
+    .chart-section {
+      animation: slideUp 0.6s 0.2s ease both; /* delayed slide-in */
+    }
+
+    /* Section headings (7-Day Forecast, Today Hourly) */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    /* The container JavaScript fills with forecast cards */
+    #forecast-container {
+      display: grid;
+      /* 7 equal columns; auto-fit means it wraps on small screens */
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 0.75rem;
+      min-height: 100px; /* placeholder height before JS runs */
+    }
+
+    /* =============================================================
+       SECTION 4 — HOURLY CHART
+       JavaScript draws temperature bars inside #chart-container.
+    ============================================================= */
+    #chart-container {
+      background: var(--glass-bg);
+      border: 1px solid var(--sky-border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      min-height: 120px; /* placeholder height before JS runs */
+    }
+
+    /* =============================================================
+       SEARCH RESULTS DROPDOWN
+       JavaScript populates this with clickable city suggestions.
+    ============================================================= */
+    #search-results {
+      /* Initially empty — JavaScript adds content dynamically */
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    /* =============================================================
+       ANIMATIONS
+       @keyframes define reusable animation sequences.
+    ============================================================= */
+
+    /* Slides an element up from below and fades it in */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Fades opacity in and out repeatedly — used for loading text */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* =============================================================
+       RESPONSIVE — SMALL SCREENS (phones)
+       When the screen is narrower than 480px, reduce padding.
+    ============================================================= */
+    @media (max-width: 480px) {
+      body { padding: 1.25rem 0.75rem; }
+      .weather-card { padding: 2rem 1.25rem; }
+      #search-container { padding: 0.4rem 0.4rem 0.4rem 0.75rem; }
+      #search-btn { padding: 0.6rem 1rem; font-size: 0.9rem; }
+    }
+
+  </style>
+
+</head>
+<body>
+
+  <!-- ============================================================
+       #app  — THE MAIN PAGE WRAPPER
+       All visible content lives inside this div.
+       JavaScript may also use this as a root reference.
+  ============================================================ -->
+  <div id="app">
+
+
+    <!-- ----------------------------------------------------------
+         DECORATIVE PAGE TITLE
+         Not required by your JS, but gives the dashboard a name.
+    ---------------------------------------------------------- -->
+    <div class="page-title">
+      <h1>Weather Dashboard</h1>
+      <p>Real-time forecasts for any city in the world</p>
+    </div>
+
+
+    <!-- ==========================================================
+         SECTION 1 — SEARCH
+         Wrapped in <header> for semantic meaning.
+         #search-container  — JS attaches event listeners here
+         #search-input      — where the user types a city name
+         #search-btn        — JS listens for clicks to run a search
+         #loading           — JS shows this while fetching data
+         #error-msg         — JS shows this if an error occurs
+    ========================================================== -->
+    <header>
+
+      <!-- Search bar: input + button side by side -->
+      <div id="search-container">
+
+        <!--
+          id="search-input"
+          type="text" means a normal text box
+          placeholder shows grey hint text when empty
+        -->
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search city..."
+          autocomplete="off"
+        />
+
+        <!--
+          id="search-btn"
+          JavaScript listens for clicks on this button
+          to start the weather search.
+        -->
+        <button id="search-btn">Search</button>
+
+      </div>
+      <!-- End #search-container -->
+
+      <!--
+        #loading: hidden by default (display:none in CSS).
+        JavaScript sets display:block while waiting for API data,
+        then hides it again once the data arrives.
+      -->
+      <div id="loading" style="display:none;">Locating you…</div>
+
+      <!--
+        #error-msg: hidden by default.
+        JavaScript writes an error message here and shows it
+        if the city is not found or the network fails.
+      -->
+      <div id="error-msg" style="display:none;"></div>
+
+    </header>
+    <!-- End <header> -->
+
+
+    <!-- ==========================================================
+         SECTION 2 — CURRENT WEATHER CARD
+         class="weather-card" — CSS targets this for styling
+         JavaScript updates the four child elements by their ids:
+           #city-name   — replaced with real city name
+           #condition   — replaced with weather description
+           #temperature — replaced with current temperature
+           #wind-speed  — replaced with wind speed
+           #unit-toggle — click to switch °C / °F
+    ========================================================== -->
+    <main class="weather-card">
+
+      <!-- City name: shows "--" until JavaScript loads real data -->
+      <h1 id="city-name">--</h1>
+
+      <!-- Condition text: e.g. "Partly cloudy" -->
+      <p id="condition">--</p>
+
+      <!-- Temperature: e.g. "18°C" — JS rewrites this whole string -->
+      <p id="temperature">--°C</p>
+
+      <!-- Wind speed: e.g. "Wind: 22 km/h" -->
+      <p id="wind-speed">Wind: -- km/h</p>
+
+      <!--
+        Unit toggle button.
+        JavaScript listens for clicks to switch between °C and °F
+        and updates the button label accordingly.
+      -->
+      <button id="unit-toggle">Switch to °F</button>
+
+    </main>
+    <!-- End .weather-card -->
+
+
+    <!-- ==========================================================
+         SECTION 3 — 7-DAY FORECAST
+         JavaScript loops over 7 days of forecast data and
+         injects a small card for each day into #forecast-container.
+    ========================================================== -->
+    <section class="forecast-section">
+
+      <!-- Heading: visible label above the forecast cards -->
+      <h2 class="section-title">7-Day Forecast</h2>
+
+      <!--
+        #forecast-container: starts empty.
+        JavaScript fills this with 7 forecast cards after
+        the weather data loads.
+      -->
+      <div id="forecast-container"></div>
+
+    </section>
+    <!-- End .forecast-section -->
+
+
+    <!-- ==========================================================
+         SECTION 4 — TODAY'S HOURLY TEMPERATURE CHART
+         JavaScript draws a bar chart (or similar) here showing
+         temperature changes throughout the current day.
+    ========================================================== -->
+    <section class="chart-section">
+
+      <!-- Heading: visible label above the chart -->
+      <h2 class="section-title">Today Hourly</h2>
+
+      <!--
+        #chart-container: starts empty.
+        JavaScript draws temperature bars / a chart inside here.
+      -->
+      <div id="chart-container"></div>
+
+    </section>
+    <!-- End .chart-section -->
+
+
+    <!-- ==========================================================
+         SEARCH RESULTS DROPDOWN
+         JavaScript populates this with a list of matching cities
+         when the user searches, so they can click the right one.
+    ========================================================== -->
+    <div id="search-results"></div>
+
+
+  </div>
+  <!-- End #app -->
+
+
+  <!-- ============================================================
+       JAVASCRIPT FILES
+       Loaded at the bottom so all HTML elements above exist
+       before the scripts try to access them.
+
+       ORDER MATTERS:
+       1. weather-codes.js — data tables (loaded first because
+                             other scripts read from it)
+       2. api.js           — talks to the weather API
+       3. display.js       — updates what the user sees
+       4. app.js           — main controller; uses all of the above
+  ============================================================ -->
+  <script src="js/weather-codes.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/display.js"></script>
+  <
