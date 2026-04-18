@@ -10,6 +10,7 @@
 // Functions in this file:
 //   renderCurrent(data)   → updates current weather on screen
 //   renderForecast(daily) → builds the 7-day forecast cards
+//   renderChart(hourly)   → draws the hourly temperature bar chart
 // ============================================================
 
 
@@ -318,3 +319,263 @@ function renderForecast(daily) {
 
 }
 // End of renderForecast function.
+
+// ============================================================
+// FUNCTION: renderChart(hourly)
+//
+// Draws a simple horizontal bar chart of today's hourly
+// temperatures using only HTML divs and CSS — no libraries.
+//
+// "hourly" is the hourly data object from the API. It looks like:
+//   hourly.time            → ["2025-06-01T00:00", "2025-06-01T01:00", ...]
+//                            (168 entries — 24 per day × 7 days)
+//   hourly.temperature_2m  → [16.1, 15.8, 15.2, ...]
+//                            (matching temperature for each hour)
+//
+// We only want TODAY's 24 hours, so we filter out the rest.
+//
+// How to call it from app.js:
+//   const data = await fetchWeather(lat, lon);
+//   renderChart(data.hourly);
+// ============================================================
+
+// "function" creates a reusable block named renderChart.
+// "hourly" is the parameter — receives data.hourly from the API.
+function renderChart(hourly) {
+
+  // Print a divider so we can easily spot this in the console.
+  console.log("--- renderChart() called ---");
+
+  // ----------------------------------------------------------
+  // STEP 1: Find the chart container and clear it.
+  // ----------------------------------------------------------
+
+  // Find the element with id="chart-container" in index.html.
+  // We store it in a variable so we only search for it once.
+  const container = document.getElementById("chart-container");
+
+  // Clear any bars that might already exist inside the container.
+  // This prevents duplicate bars if renderChart is called again
+  // when the user searches for a different city.
+  container.innerHTML = "";
+
+  // ----------------------------------------------------------
+  // STEP 2: Get today's date as a string in YYYY-MM-DD format.
+  // We use this to filter hourly entries to only today's hours.
+  // ----------------------------------------------------------
+
+  // new Date() creates an object representing right now.
+  // .toISOString() converts it to a string like "2025-06-03T10:30:00.000Z".
+  // .slice(0, 10) cuts the string to just the first 10 characters: "2025-06-03".
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Log today's date so we can verify the correct day is being used.
+  console.log("Today's date:", today);
+
+  // ----------------------------------------------------------
+  // STEP 3: Find the indexes for today's hours only.
+  //
+  // The hourly.time array has 168 entries (24 hours x 7 days).
+  // Each entry looks like "2025-06-03T14:00" — date + time.
+  // We use .startsWith(today) to check if an entry belongs to today.
+  //
+  // We collect the INDEX numbers (0, 1, 2...) not the values,
+  // because we need the same index to get the matching temperature
+  // from hourly.temperature_2m.
+  // ----------------------------------------------------------
+
+  // Start with an empty array that will hold today's index numbers.
+  const todayIndexes = [];
+
+  // Loop through every entry in the hourly.time array.
+  // hourly.time.length is 168 — the loop runs 168 times.
+  for (let i = 0; i < hourly.time.length; i++) {
+
+    // Check if this time entry starts with today's date string.
+    // Example: "2025-06-03T14:00".startsWith("2025-06-03") → true
+    // Example: "2025-06-04T00:00".startsWith("2025-06-03") → false
+    if (hourly.time[i].startsWith(today)) {
+
+      // This entry belongs to today — save its index number.
+      // .push() adds a value to the end of an array.
+      todayIndexes.push(i);
+
+    }
+
+  }
+
+  // Log how many hours we found for today (should always be 24).
+  console.log("Hours found for today:", todayIndexes.length);
+
+  // ----------------------------------------------------------
+  // STEP 4: Collect today's temperatures into their own array.
+  // We need this to calculate the maximum temperature, which
+  // is used to set the proportional height of each bar.
+  // ----------------------------------------------------------
+
+  // .map() creates a new array by transforming each item.
+  // For each index in todayIndexes, we grab the matching temperature.
+  // Result: an array of 24 temperature numbers, e.g. [16.1, 15.8, ...]
+  const todayTemps = todayIndexes.map(i => hourly.temperature_2m[i]);
+
+  // Math.max(...todayTemps) finds the highest temperature in the array.
+  // The "..." (spread operator) unpacks the array into individual arguments
+  // because Math.max expects separate numbers, not an array.
+  // We use this as the 100% height reference for all bars.
+  const maxTemp = Math.max(...todayTemps);
+
+  // Log the max temperature so we can verify the bar heights make sense.
+  console.log("Max temperature today:", maxTemp);
+
+  // ----------------------------------------------------------
+  // STEP 5: Create the wrapper div that holds all the bars.
+  // This div uses flexbox to line bars up side by side.
+  // ----------------------------------------------------------
+
+  // Create a new <div> element to act as the chart wrapper.
+  const wrapper = document.createElement("div");
+
+  // style is an object on every element — we set CSS properties on it.
+  // Each line below is the same as writing that CSS property in a stylesheet.
+
+  // Flexbox lines child elements (the bar columns) up in a row.
+  wrapper.style.display = "flex";
+
+  // Align all columns to the bottom so short bars sit at the baseline,
+  // not floating in the middle — like a real bar chart.
+  wrapper.style.alignItems = "flex-end";
+
+  // Small gap between each bar column.
+  wrapper.style.gap = "4px";
+
+  // Fixed height for the chart area — bars grow upward from the bottom.
+  wrapper.style.height = "120px";
+
+  // If the bars are too wide to fit, allow sideways scrolling.
+  wrapper.style.overflowX = "auto";
+
+  // A little breathing room below the bars for the time labels.
+  wrapper.style.paddingBottom = "20px";
+
+  // ----------------------------------------------------------
+  // STEP 6: Loop through today's hours and build one column per hour.
+  // ----------------------------------------------------------
+
+  // Loop through each index in todayIndexes (24 iterations for 24 hours).
+  for (let j = 0; j < todayIndexes.length; j++) {
+
+    // Get the original array index for this hour.
+    // We need it to look up the correct time and temperature.
+    const i = todayIndexes[j];
+
+    // Get the temperature for this specific hour. Example: 21.4
+    const temp = hourly.temperature_2m[i];
+
+    // Get the time string for this hour. Example: "2025-06-03T14:00"
+    const timeString = hourly.time[i];
+
+    // Extract just the hour portion for the label.
+    // .slice(11, 16) cuts characters at positions 11 to 15.
+    // "2025-06-03T14:00" → "14:00"
+    const hourLabel = timeString.slice(11, 16);
+
+    // Calculate the bar height proportionally.
+    // If this temp is the max, the bar is 100px tall.
+    // If this temp is half the max, the bar is 50px tall.
+    // We add "px" at the end because CSS height needs a unit.
+    // Math.max(1, ...) ensures the bar is never 0px tall (invisible).
+    const barHeight = Math.max(1, (temp / maxTemp) * 100) + "px";
+
+    // --------------------------------------------------------
+    // Build the column div — the outer wrapper for one hour.
+    // It stacks the bar on top and the time label below.
+    // --------------------------------------------------------
+
+    // Create the outer column div for this hour.
+    const column = document.createElement("div");
+
+    // Flexbox stacks children vertically (bar on top, label below).
+    column.style.display = "flex";
+
+    // flex-direction column stacks children top to bottom.
+    column.style.flexDirection = "column";
+
+    // Centre the bar and label horizontally within the column.
+    column.style.alignItems = "center";
+
+    // Small gap between the bar and the label below it.
+    column.style.gap = "4px";
+
+    // --------------------------------------------------------
+    // Build the bar div — the coloured rectangle.
+    // Its height is proportional to the temperature.
+    // --------------------------------------------------------
+
+    // Create the inner bar div.
+    const bar = document.createElement("div");
+
+    // Fixed width for every bar — keeps the chart uniform.
+    bar.style.width = "20px";
+
+    // The calculated proportional height for this temperature.
+    bar.style.height = barHeight;
+
+    // Light blue colour for the bar — matches the dashboard theme.
+    bar.style.background = "#5bc8f5";
+
+    // Round only the top corners — the bottom stays flat at the baseline.
+    bar.style.borderRadius = "4px 4px 0 0";
+
+    // Add a tooltip so the user can hover over a bar to see the exact temp.
+    // title is a standard HTML attribute that shows on hover.
+    bar.title = `${temp}°C`;
+
+    // --------------------------------------------------------
+    // Build the label span — the hour text below the bar.
+    // --------------------------------------------------------
+
+    // Create a <span> element to display the hour label.
+    const label = document.createElement("span");
+
+    // Set the text to the hour portion of the time. Example: "14:00"
+    label.textContent = hourLabel;
+
+    // Small font so the label fits under the narrow bar.
+    label.style.fontSize = "10px";
+
+    // Muted colour so the labels do not compete with the bars.
+    label.style.color = "#aaaaaa";
+
+    // Prevent the label from wrapping onto two lines.
+    label.style.whiteSpace = "nowrap";
+
+    // --------------------------------------------------------
+    // Assemble: nest bar and label inside column, then add
+    // the finished column into the wrapper.
+    // --------------------------------------------------------
+
+    // Add the bar div inside the column div — appears at the top.
+    column.appendChild(bar);
+
+    // Add the label span inside the column div — appears below the bar.
+    column.appendChild(label);
+
+    // Add the completed column into the wrapper div.
+    wrapper.appendChild(column);
+
+  }
+  // End of the bar-building loop — all 24 columns are now in the wrapper.
+
+  // ----------------------------------------------------------
+  // STEP 7: Add the finished wrapper into the page.
+  // Only now does the chart actually appear on screen.
+  // ----------------------------------------------------------
+
+  // Place the fully built wrapper div inside chart-container on the page.
+  container.appendChild(wrapper);
+
+  // Confirm in the console that the chart was drawn successfully.
+  console.log("renderChart() finished —", todayIndexes.length, "bars drawn.");
+
+}
+// End of renderChart function.
