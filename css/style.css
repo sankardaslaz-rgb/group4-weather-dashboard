@@ -1,530 +1,618 @@
 /* ============================================================
-   style.css — all visual styles for the weather dashboard
+   css/style.css — Weather Dashboard
+   ============================================================
+   CSS works like this:
+     selector { property: value; }
+   The selector finds the HTML element.
+   The property is what you want to change.
+   The value is what to change it to.
    ============================================================ */
 
 
-/* --- Google Font Import ------------------------------------*/
-/* Loads the DM Mono font from Google Fonts for the whole page */
+/* ============================================================
+   GOOGLE FONTS IMPORT
+   Loads the "DM Mono" font from the internet so we can use it.
+   Must be at the very top of the file.
+   If there is no internet the browser falls back to the
+   built-in monospace font automatically.
+   ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap');
 
 
-/* --- Reset -------------------------------------------------*/
-/* Removes default margin and padding from every element */
-/* box-sizing border-box means padding is included in the width, not added on top */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-
-/* --- Body --------------------------------------------------*/
-/* Sets the dark blue background colour for the whole page */
-/* Sets the text colour to white so it shows up on the dark background */
-/* Sets the font to DM Mono — if it fails to load, falls back to any monospace font */
-/* min-height 100vh means the background always covers the full screen height */
+/* ============================================================
+   BODY
+   Styles the entire page background and default text.
+   Every element on the page is inside body, so rules set
+   here are inherited by everything unless overridden below.
+   ============================================================ */
 body {
+  /* Dark navy — sets the mood for the whole dashboard */
   background-color: #0b1630;
+
+  /* All text defaults to white unless a specific rule changes it */
   color: #ffffff;
+
+  /* Use DM Mono first. If it has not loaded, fall back to any
+     monospace font the browser has built in */
   font-family: 'DM Mono', monospace;
+
+  /* Remove the default margin browsers add around the page edges */
+  margin: 0;
+
+  /* Breathing room above and below all content */
+  padding: 2rem 0;
+
+  /* Ensures the dark background covers the full screen height
+     even when there is not much content on the page */
   min-height: 100vh;
-  padding: 2rem 1rem;
 }
 
 
-/* --- #app --------------------------------------------------*/
-/* Sets a maximum width so the layout does not stretch too wide on big screens */
-/* margin auto centres the app horizontally on the page */
-/* padding adds breathing room inside the container on all sides */
-#app {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
-}
+/* ============================================================
+   HEADER
+   Styles the top bar that contains the search container.
+   A darker background helps it stand out from the main content.
+   ============================================================ */
+header {
+  /* Slightly darker than the page background so it reads as
+     a separate top bar */
+  background: rgba(0, 0, 0, 0.2);
 
+  /* Comfortable inner padding so content does not touch the edges */
+  padding: 1rem 2rem;
 
-/* --- Search container --------------------------------------*/
-/* display flex puts the input and button side by side in a row */
-/* gap adds a small space between the input and the button */
-/* margin-bottom pushes the weather card down away from the search bar */
-#search-container {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
+  /* Space below the header before the main content starts */
   margin-bottom: 1.5rem;
 }
 
-/* Styles the text input where the user types a city name */
-/* flex 1 makes the input stretch and fill all available space */
-/* padding adds room inside the input so the text is not squashed against the edge */
-/* border-radius makes the corners rounded */
-/* border none removes the default browser border */
-/* background and color make it match the dark dashboard theme */
-/* font-family inherits DM Mono from the body */
+
+/* ============================================================
+   #SEARCH-CONTAINER
+   The div that holds the search input and button side by side.
+   Flexbox lines them up in a horizontal row automatically.
+   This matches id="search-container" in your index.html.
+   ============================================================ */
+#search-container {
+  /* Flexbox makes children (the input and button) sit in a row */
+  display: flex;
+
+  /* Small gap between the input box and the button */
+  gap: 8px;
+
+  /* Cap the search bar width and centre it on the page */
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* The text input inside #search-container
+   This matches id="search-input" in your index.html */
 #search-input {
+  /* flex: 1 makes the input grow to fill all available space,
+     pushing the button to the right edge automatically */
   flex: 1;
-  padding: 0.6rem 1rem;
-  border-radius: 40px;
+
+  /* Comfortable inner padding so typed text is not cramped */
+  padding: 0.75rem 1rem;
+
+  /* Rounded corners on all four sides */
+  border-radius: 10px;
+
+  /* Subtle border — the dark background defines the shape */
   border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
+
+  /* Semi-transparent dark background blends with the header */
+  background: rgba(255, 255, 255, 0.07);
+
+  /* White text so the user can read what they type */
   color: #ffffff;
+
+  /* Match the page font — inputs use the system font by default
+     so we must set this explicitly */
   font-family: 'DM Mono', monospace;
-  font-size: 0.9rem;
-  outline: none;
+  font-size: 1rem;
 }
 
-/* Changes the placeholder text colour to a muted grey so it is readable but subtle */
+/* The grey hint text shown in the input before the user types anything */
 #search-input::placeholder {
-  color: #7a92bc;
+  color: #666666;
 }
 
-/* Adds a bright blue border when the user clicks into the input */
+/* Highlight the input with a blue glow when the user clicks into it */
 #search-input:focus {
-  border-color: #5bc8f5;
+  /* Remove the default browser outline so we can draw our own */
+  outline: none;
+
+  /* Our custom blue border */
+  border-color: #4a90d9;
+
+  /* Soft blue glow around the input */
+  box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.2);
 }
 
-/* Styles the Search button next to the input */
-/* padding sets the size of the button */
-/* border-radius makes it a rounded pill shape */
-/* border none removes the default browser button border */
-/* background sets the button colour to a soft blue */
-/* color white makes the text visible */
-/* cursor pointer shows a hand icon when hovering over the button */
-/* font-family keeps the same font as the rest of the page */
+/* The search button inside #search-container
+   This matches id="search-btn" in your index.html */
 #search-btn {
-  padding: 0.6rem 1.4rem;
-  border-radius: 40px;
+  /* Solid blue background makes it clearly a clickable action */
+  background: #4a90d9;
+
+  /* White text on the blue button */
+  color: #ffffff;
+
+  /* No border needed — the blue background defines the shape */
   border: none;
-  background: #5bc8f5;
-  color: #0b1630;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.9rem;
-  font-weight: 500;
+
+  /* Padding around the button text */
+  padding: 0.75rem 1.25rem;
+
+  /* Match the input corner radius so they look like a pair */
+  border-radius: 10px;
+
+  /* Hand cursor so the user knows it is clickable */
   cursor: pointer;
-  transition: background 0.2s;
+
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+
+  /* Smooth colour change when hovering */
+  transition: background 0.2s ease;
 }
 
-/* Darkens the button slightly when the user hovers over it */
+/* Slightly darker blue when the mouse hovers over the button */
 #search-btn:hover {
-  background: #3ab4e0;
+  background: #357abd;
 }
 
 
-/* --- Search results ----------------------------------------*/
-/* Adds spacing below the search results dropdown */
-/* display flex with flex-direction column stacks the result buttons vertically */
+/* ============================================================
+   #SEARCH-RESULTS
+   The container where clickable city result buttons appear
+   after the user performs a search.
+   This matches id="search-results" in your index.html.
+   ============================================================ */
 #search-results {
+  /* Stack result buttons vertically */
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 1rem;
+
+  /* Centre the results below the search bar */
+  max-width: 600px;
+  margin: 0.75rem auto 0;
 }
 
-/* Styles each city result that appears after searching */
-/* background gives it a subtle card look */
-/* text-align left keeps the city name aligned to the left */
-/* cursor pointer shows a hand so the user knows it is clickable */
+/* Each individual city result button injected by display.js */
 #search-results button {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 0.6rem 1rem;
+  border-radius: 8px;
   color: #ffffff;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+
+  /* Left-aligned text reads more naturally in a list */
   text-align: left;
+
   cursor: pointer;
-  transition: background 0.2s;
-}
-
-/* Brightens the result button when the user hovers over it */
-#search-results button:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-
-/* --- Loading message ---------------------------------------*/
-/* Styles the "Locating you..." message shown while fetching data */
-/* text-align center puts it in the middle of the screen */
-/* color gives it a soft blue so it stands out from regular text */
-/* margin-bottom adds space below before the weather card appears */
-#loading {
-  text-align: center;
-  color: #5bc8f5;
+  font-family: 'DM Mono', monospace;
   font-size: 0.9rem;
-  margin-bottom: 1rem;
-  letter-spacing: 1px;
+  transition: background 0.2s ease;
+}
+
+#search-results button:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 
-/* --- Error message -----------------------------------------*/
-/* Styles the error message shown when something goes wrong */
-/* background gives it a red tinted look to signal an error */
-/* border adds a subtle red border around it */
-/* border-radius rounds the corners to match the rest of the UI */
-/* padding gives the text breathing room inside the box */
-/* margin-bottom pushes content below it down */
-#error-msg {
-  background: rgba(249, 124, 75, 0.12);
-  border: 1px solid rgba(249, 124, 75, 0.3);
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  color: #f97c4b;
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
+/* ============================================================
+   MAIN
+   The <main> element holds all the weather cards, forecast,
+   and chart. We constrain its width and centre it here
+   (this replaces the #app rule you specified — your HTML
+   uses <main> rather than a div with id="app").
+   ============================================================ */
+main {
+  /* Never wider than 900px — keeps it readable on large screens */
+  max-width: 900px;
+
+  /* margin auto on left and right centres the block horizontally */
+  margin: 0 auto;
+
+  /* Inner breathing room so content does not touch the edges */
+  padding: 0 2rem 2rem;
 }
 
 
-/* --- .weather-card -----------------------------------------*/
-/* Creates the main card that shows current weather */
-/* background is white but almost invisible (0.05 opacity) for a frosted glass look */
-/* border adds a very faint white outline around the card */
-/* border-radius 16px rounds the corners to look modern */
-/* padding 1.5rem adds space inside the card so content is not touching the edges */
-/* margin-bottom pushes the forecast section below away from this card */
+/* ============================================================
+   .WEATHER-CARD
+   A reusable card style. Any element with class="weather-card"
+   gets this frosted-glass appearance.
+   The dot (.) means this is a class — you can apply it to
+   as many elements as you like.
+   ============================================================ */
 .weather-card {
+  /* rgba = Red, Green, Blue, Alpha (opacity).
+     Alpha 0.05 gives a very subtle white glow on the dark bg */
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Rounds all four corners by 16px — no sharp edges */
   border-radius: 16px;
+
+  /* Inner spacing so text does not press against the card edges */
   padding: 1.5rem;
-  margin-bottom: 1.5rem;
+
+  /* Space below this card before the next section */
+  margin-bottom: 1rem;
+
+  /* Very subtle border so the card has a slight outline */
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 
-/* --- #city-name --------------------------------------------*/
-/* Makes the city name large and bold so it is the first thing the user sees */
-/* margin-bottom adds a small gap between the city name and the condition text */
-/* letter-spacing spreads the letters slightly for a clean look */
+/* ============================================================
+   #CITY-NAME
+   The large heading showing the city whose weather is displayed.
+   This matches id="city-name" in your index.html.
+   The hash (#) targets the one element with that exact id.
+   ============================================================ */
 #city-name {
+  /* Large text so the city name is the first thing you notice */
   font-size: 2.5rem;
+
+  /* Extra thick weight */
   font-weight: bold;
-  margin-bottom: 0.3rem;
-  letter-spacing: -0.5px;
-}
 
+  /* Remove the default top margin browsers add to headings */
+  margin-top: 0;
 
-/* --- #condition --------------------------------------------*/
-/* Shows the weather condition text in a muted grey */
-/* It is smaller than the city name to keep the visual hierarchy clear */
-/* margin-bottom pushes the temperature down away from this text */
-#condition {
-  font-size: 1rem;
-  color: #aaaaaa;
-  margin-bottom: 1.2rem;
-}
-
-
-/* --- #temperature ------------------------------------------*/
-/* Makes the temperature number very large — it is the most important number */
-/* color #f5c542 is a warm golden yellow that stands out on the dark background */
-/* line-height 1 removes extra vertical space above and below the number */
-/* margin-bottom adds space between the temperature and the wind speed */
-#temperature {
-  font-size: 4rem;
-  color: #f5c542;
-  line-height: 1;
+  /* Small gap below before the condition text */
   margin-bottom: 0.5rem;
 }
 
 
-/* --- #wind-speed -------------------------------------------*/
-/* Styles the wind speed text in a lighter muted colour */
-/* font-size is smaller since wind speed is secondary information */
-/* margin-bottom adds space between wind speed and the toggle button */
+/* ============================================================
+   #TEMPERATURE
+   The large number showing the current temperature.
+   Made very large and golden so it stands out as the main stat.
+   This matches id="temperature" in your index.html.
+   ============================================================ */
+#temperature {
+  /* Very large — the hero number of the whole dashboard */
+  font-size: 4rem;
+
+  /* Warm golden yellow — makes the number feel alive */
+  color: #f5c542;
+
+  /* Remove default paragraph margin so spacing is easy to control */
+  margin: 0;
+
+  /* Small gap below before the wind speed */
+  padding-bottom: 0.5rem;
+}
+
+
+/* ============================================================
+   #CONDITION
+   The weather description text, e.g. "Clear sky ☀️".
+   Kept small and grey — it is supporting info, not the headline.
+   This matches id="condition" in your index.html.
+   ============================================================ */
+#condition {
+  /* Small text for a secondary detail */
+  font-size: 1rem;
+
+  /* Grey signals this is less important than the temperature */
+  color: #aaaaaa;
+
+  margin: 0.25rem 0;
+}
+
+
+/* ============================================================
+   #WIND-SPEED
+   The wind speed reading shown below the condition.
+   This matches id="wind-speed" in your index.html.
+   ============================================================ */
 #wind-speed {
-  font-size: 0.9rem;
-  color: #7a92bc;
-  margin-bottom: 1rem;
+  /* Medium size — noticeable but not competing with temperature */
+  font-size: 1.1rem;
+
+  /* Slightly muted white — secondary information */
+  color: #cccccc;
+
+  margin: 0.25rem 0;
 }
 
 
-/* --- #unit-toggle button -----------------------------------*/
-/* Styles the °C / °F toggle button inside the weather card */
-/* background transparent means it has no fill — just a border outline */
-/* border adds a faint white outline around the button */
-/* border-radius rounds it into a pill shape */
-/* color white makes the text visible */
-/* cursor pointer shows the hand cursor on hover */
-/* transition smoothly animates any colour changes */
+/* ============================================================
+   #UNIT-TOGGLE
+   The small button that switches between Celsius and Fahrenheit.
+   Styled as a subtle pill outline so it does not compete with
+   the main weather stats.
+   This matches id="unit-toggle" in your index.html.
+   ============================================================ */
 #unit-toggle {
+  /* Transparent fill — just an outline pill shape */
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 40px;
-  padding: 0.4rem 1rem;
+
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #ffffff;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.8rem;
+  padding: 0.4rem 0.9rem;
+
+  /* Large border-radius makes it a pill shape */
+  border-radius: 20px;
+
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+
+  /* Space above and below the button */
+  margin: 1rem 0;
+
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-/* Adds a subtle white background when the user hovers over the toggle button */
 #unit-toggle:hover {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 
-/* --- Section headings --------------------------------------*/
-/* Styles the h2 headings above the forecast and chart sections */
-/* font-size is smaller than the city name to keep the hierarchy clear */
-/* color is a muted grey so it does not compete with the weather data */
-/* letter-spacing spreads the letters and text-transform makes them uppercase */
-/* margin adds space above and below each heading */
+/* ============================================================
+   #STATUS-MESSAGE
+   Shows "Loading...", "Locating you...", or error messages.
+   Starts empty — JavaScript makes text appear here as needed.
+   This matches id="status-message" in your index.html.
+   ============================================================ */
+#status-message {
+  font-size: 0.9rem;
+  color: #aaaaaa;
+  text-align: center;
+  margin: 0.5rem 0;
+
+  /* Italic makes it look like a system note, not weather data */
+  font-style: italic;
+}
+
+
+/* ============================================================
+   FORECAST SECTION HEADING
+   Styles the <h2>7-Day Forecast</h2> and <h2>Today Hourly</h2>
+   headings that sit above each section.
+   ============================================================ */
 h2 {
-  font-size: 0.72rem;
-  color: #7a92bc;
-  letter-spacing: 2.5px;
+  /* Slightly smaller than the city name but still clear */
+  font-size: 1.1rem;
+
+  /* Muted colour so headings guide without dominating */
+  color: #aaaaaa;
+
+  /* Space above each section heading */
+  margin: 1.5rem 0 0.75rem;
+
+  /* All caps + wide letter spacing gives a clean label feel */
   text-transform: uppercase;
-  margin: 1.5rem 0 1rem;
+  letter-spacing: 0.08em;
 }
 
 
-/* --- #forecast-container -----------------------------------*/
-/* display flex puts the 7 forecast cards side by side in a row */
-/* gap adds space between each card */
-/* overflow-x auto adds a horizontal scrollbar if the cards do not all fit */
-/* padding-bottom adds a little space below the scrollable area */
-/* scrollbar styling below makes the scrollbar thin and dark */
+/* ============================================================
+   #FORECAST-CONTAINER
+   The row that holds all 7 day forecast cards side by side.
+   overflow-x: auto lets it scroll sideways if cards do not fit.
+   This matches id="forecast-container" in your index.html.
+   ============================================================ */
 #forecast-container {
+  /* Flexbox lines the 7 cards up in a horizontal row */
   display: flex;
-  flex-direction: row;
+
+  /* Space between each forecast card */
   gap: 10px;
+
+  /* If the cards are too wide for the screen, allow the user
+     to scroll the row sideways instead of breaking the layout */
   overflow-x: auto;
+
+  /* Padding at the bottom so the scrollbar does not overlap cards */
   padding-bottom: 0.5rem;
-  margin-bottom: 1.5rem;
 }
 
-/* Hides the scrollbar track in webkit browsers (Chrome, Safari, Edge) */
+/* Style the horizontal scrollbar so it is thin and subtle */
 #forecast-container::-webkit-scrollbar {
   height: 4px;
 }
-
-/* Sets the scrollbar track colour to a dark transparent grey */
-#forecast-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px;
-}
-
-/* Sets the scrollbar thumb (the draggable part) to a soft blue */
 #forecast-container::-webkit-scrollbar-thumb {
-  background: rgba(91, 200, 245, 0.3);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
 }
 
 
-/* --- .forecast-card ----------------------------------------*/
-/* Styles each individual day card in the 7-day forecast row */
-/* min-width 100px stops the cards from squashing too small */
-/* flex-shrink 0 prevents the cards from shrinking when there is not enough space */
-/* background matches the frosted glass look of the main weather card */
-/* border-radius 12px rounds the corners */
-/* padding adds space inside so the text is not against the edges */
-/* text-align center puts all the text in the middle of each card */
+/* ============================================================
+   .FORECAST-CARD
+   Each individual day card inside the forecast row.
+   JavaScript (display.js) creates these and gives them
+   class="forecast-card" so this style applies automatically.
+   ============================================================ */
 .forecast-card {
+  /* Never shrink below 100px — keeps each card readable */
   min-width: 100px;
-  flex-shrink: 0;
+
+  /* Same frosted-glass look as .weather-card */
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Slightly smaller radius than the main card */
   border-radius: 12px;
-  padding: 1rem 0.5rem;
+
+  /* Inner spacing */
+  padding: 1rem;
+
+  /* Centre all text and emoji inside the card */
   text-align: center;
-  transition: background 0.2s;
+
+  /* Subtle border matching the main card */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Smooth hover animation — pairs with the rule below */
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
-/* Brightens the forecast card slightly when the user hovers over it */
+/* Lift the card slightly when the user hovers over it */
 .forecast-card:hover {
+  /* Moves the card 4px upward */
+  transform: translateY(-4px);
+
+  /* Slightly brighter background on hover */
   background: rgba(255, 255, 255, 0.1);
+
+  cursor: pointer;
 }
 
-/* Styles the day name text inside each forecast card (e.g. "Mon") */
-/* font-size is small and the colour is muted grey */
-.forecast-card .day-name {
-  font-size: 0.72rem;
-  color: #7a92bc;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
+/* The day label inside each card, e.g. "Mon", "Tue" */
+.forecast-card .day-label {
+  font-size: 0.8rem;
+  color: #aaaaaa;
+  margin-bottom: 0.4rem;
 }
 
-/* Styles the weather emoji icon inside each forecast card */
-/* font-size 1.8rem makes the emoji large enough to see clearly */
+/* The weather emoji, e.g. ☀️ ⛅ 🌧️ */
 .forecast-card .forecast-icon {
   font-size: 1.8rem;
-  margin: 0.4rem 0;
+  margin: 0.3rem 0;
 }
 
-/* Styles the high temperature in each forecast card in a warm yellow */
+/* High temperature shown in warm yellow to match main temp colour */
 .forecast-card .temp-high {
   font-size: 1rem;
   color: #f5c542;
-  font-weight: 500;
 }
 
-/* Styles the low temperature in each forecast card in a muted grey */
+/* Low temperature in a cool blue-grey — visually cooler than the high */
 .forecast-card .temp-low {
-  font-size: 0.8rem;
-  color: #7a92bc;
-  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  color: #88aacc;
 }
 
 
-/* --- #chart-container --------------------------------------*/
-/* Contains the hourly temperature bar chart */
-/* overflow-x auto allows horizontal scrolling if there are many bars */
-/* padding adds space inside so the bars are not against the edges */
-/* background and border give it the same card look as the forecast */
-/* border-radius rounds the corners */
-/* margin-bottom adds space below the chart */
+/* ============================================================
+   #CHART-CONTAINER
+   Holds the hourly temperature bar chart.
+   Bars sit side by side and are aligned to the bottom so
+   short bars do not float — they all start from the same base.
+   This matches id="chart-container" in your index.html.
+   ============================================================ */
 #chart-container {
+  /* Flexbox puts all bars in a horizontal row */
   display: flex;
+
+  /* Small gap between each bar */
+  gap: 6px;
+
+  /* Align bars to the bottom — bars grow upward from the baseline */
   align-items: flex-end;
-  gap: 4px;
-  overflow-x: auto;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  margin-bottom: 1.5rem;
-  min-height: 140px;
+
+  /* Fixed height for the whole chart area */
+  height: 160px;
+
+  /* Extra space at the bottom for the time labels below each bar */
+  padding-bottom: 1.5rem;
+
+  margin-top: 0.5rem;
 }
 
-/* Hides the scrollbar in the chart container in webkit browsers */
-#chart-container::-webkit-scrollbar {
-  height: 4px;
-}
-
-/* Sets the chart scrollbar track colour */
-#chart-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px;
-}
-
-/* Sets the chart scrollbar thumb colour */
-#chart-container::-webkit-scrollbar-thumb {
-  background: rgba(91, 200, 245, 0.3);
-  border-radius: 4px;
-}
-
-/* Styles each column (bar + label) inside the chart */
-/* display flex with flex-direction column stacks the bar and label vertically */
-/* align-items center centres both the bar and the label horizontally */
-.chart-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Styles the actual temperature bar inside each chart column */
-/* width 20px sets how wide each bar is */
-/* background gives it the blue colour */
-/* border-radius rounds only the top two corners so the bottom sits flat */
-/* transition animates the height if it ever changes */
+/* Each individual bar inside the chart */
 .chart-bar {
-  width: 20px;
-  background: #5bc8f5;
+  /* flex: 1 makes all bars share the available width equally */
+  flex: 1;
+
+  /* Blue gradient that goes from darker at bottom to lighter at top */
+  background: linear-gradient(to top, #4a90d9, #88aacc);
+
+  /* Round only the top two corners — the bottom stays flat */
   border-radius: 4px 4px 0 0;
-  transition: height 0.3s ease;
+
+  /* Smooth height animation when data loads or unit changes */
+  transition: height 0.4s ease;
+
+  /* Relative positioning so labels can be placed inside */
+  position: relative;
 }
 
-/* Styles the hour label below each bar (e.g. "14:00") */
-/* font-size 10px is very small so it fits under the narrow bars */
-/* color is muted so it does not distract from the bars themselves */
-.chart-label {
-  font-size: 10px;
-  color: #7a92bc;
+/* The time label below each bar, e.g. "06:00" */
+.chart-bar .bar-label {
+  position: absolute;
+
+  /* Place it just below the bottom edge of the bar */
+  bottom: -1.4rem;
+
+  /* Centre it under the bar */
+  left: 50%;
+  transform: translateX(-50%);
+
+  font-size: 0.65rem;
+  color: #888888;
+
+  /* Prevent the text from wrapping onto two lines */
+  white-space: nowrap;
+}
+
+/* The temperature value shown above each bar, e.g. "21°" */
+.chart-bar .bar-value {
+  position: absolute;
+  top: -1.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  color: #f5c542;
   white-space: nowrap;
 }
 
 
-/* --- Footer ------------------------------------------------*/
-/* Styles the small credit line at the bottom of the page */
-/* text-align center puts it in the middle */
-/* color is very muted so it does not draw attention */
-/* font-size is small since it is just a credit note */
-/* margin-top adds space between the chart and the footer */
-footer {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 0.75rem;
-  margin-top: 2rem;
-  padding-bottom: 1rem;
-}
-
-
 /* ============================================================
-   RESPONSIVE — screens under 600px wide (mobile)
+   MEDIA QUERY — screens narrower than 600px (phones)
+   A media query says: only apply these styles IF the screen
+   is smaller than 600px wide. Inside, we override the rules
+   above to make everything touch-friendly and stacked.
    ============================================================ */
-
-/* This media query applies only when the screen is 600px wide or less */
-/* Everything inside this block overrides the styles above for small screens */
 @media (max-width: 600px) {
 
-  /* Reduces body padding on mobile so there is more space for content */
-  body {
-    padding: 1rem 0.5rem;
-  }
-
-  /* Reduces app padding on mobile */
-  #app {
+  /* Less padding on mobile so content is not squished */
+  header {
     padding: 1rem;
   }
 
-  /* Stacks the search input and button vertically on mobile */
-  /* Each one takes full width so they are easy to tap */
-  #search-container {
-    flex-direction: column;
+  /* Less side padding inside main on mobile */
+  main {
+    padding: 0 1rem 2rem;
   }
 
-  /* Makes the search input full width on mobile */
-  #search-input {
-    width: 100%;
-  }
-
-  /* Makes the search button full width on mobile */
-  #search-btn {
-    width: 100%;
-  }
-
-  /* Reduces the city name font size so it fits on a small screen */
+  /* Smaller city name so it fits on a narrow screen */
   #city-name {
     font-size: 1.8rem;
   }
 
-  /* Reduces the temperature font size on mobile */
+  /* Slightly smaller temperature on mobile */
   #temperature {
-    font-size: 2.8rem;
+    font-size: 3rem;
   }
 
-  /* Makes the forecast cards slightly narrower so more fit on screen */
+  /* Stack the search input and button vertically on small screens */
+  #search-container {
+    flex-direction: column;
+  }
+
+  /* Make the button full width when stacked */
+  #search-btn {
+    width: 100%;
+  }
+
+  /* Slightly narrower forecast cards so more fit without scrolling */
   .forecast-card {
     min-width: 80px;
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Shorter chart on mobile to leave room for other content */
+  #chart-container {
+    height: 120px;
   }
 
 }
-
-
-/* ============================================================
-   RESPONSIVE — screens under 400px wide (very small phones)
-   ============================================================ */
-
-@media (max-width: 400px) {
-
-  /* Reduces city name further on very small screens */
-  #city-name {
-    font-size: 1.5rem;
-  }
-
-  /* Reduces temperature further on very small screens */
-  #temperature {
-    font-size: 2.2rem;
-  }
-
-  /* Makes forecast cards even narrower to fit more on screen */
-  .forecast-card {
-    min-width: 70px;
-    padding: 0.8rem 0.3rem;
-  }
-
-}
+/* End media query */
