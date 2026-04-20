@@ -8,9 +8,10 @@
 //   display.js = takes that data and writes it onto the page
 //
 // Functions in this file:
-//   renderCurrent(data)   → updates current weather on screen
-//   renderForecast(daily) → builds the 7-day forecast cards
-//   renderChart(hourly)   → draws the hourly temperature bar chart
+//   renderCurrent(data)      → updates current weather on screen
+//   renderForecast(daily)    → builds the 7-day forecast cards
+//   renderChart(hourly)      → draws the hourly temperature bar chart
+//   setBackground(code)      → changes page background based on weather
 // ============================================================
 
 
@@ -579,3 +580,117 @@ function renderChart(hourly) {
 
 }
 // End of renderChart function.
+
+// ============================================================
+// FUNCTION: setBackground(weatherCode)
+//
+// Changes the entire page background to a gradient that matches
+// the current weather condition.
+//
+// weatherCode is the WMO code number from the API, e.g. 63.
+// We apply the gradient directly to document.body.style.background
+// so it covers the whole page instantly.
+//
+// How to call it from app.js or inside renderCurrent():
+//   setBackground(data.current.weather_code);
+// ============================================================
+
+// "function" creates a reusable block named setBackground.
+// "weatherCode" is the parameter — the WMO code number passed in.
+function setBackground(weatherCode) {
+
+  // Log which code was received so we can check it in the console.
+  console.log("setBackground() called with code:", weatherCode);
+
+  // We will store the chosen gradient string in this variable.
+  // "let" is used instead of "const" because we reassign it below.
+  let gradient;
+
+  // ----------------------------------------------------------
+  // STEP 1: Decide which gradient to use based on the code.
+  //
+  // We use if / else if / else — a chain of conditions.
+  // JavaScript checks each condition from top to bottom and
+  // stops at the FIRST one that is true, running only that block.
+  // The final "else" is the fallback if nothing else matched.
+  // ----------------------------------------------------------
+
+  // Check for code 0 or 1 — clear sky or mainly clear (sunny).
+  // The || means OR — true if either side is true.
+  if (weatherCode === 0 || weatherCode === 1) {
+
+    // Warm orange sunset gradient — feels sunny and bright.
+    gradient = "linear-gradient(to bottom, #1a1a2e, #f97c4b)";
+
+  // Check for code 2 or 3 — partly cloudy or fully overcast.
+  } else if (weatherCode === 2 || weatherCode === 3) {
+
+    // Muted blue-grey gradient — feels grey and overcast.
+    gradient = "linear-gradient(to bottom, #1a1a2e, #4a4a6a)";
+
+  // Check for code 45 or 48 — fog or icy fog.
+  } else if (weatherCode === 45 || weatherCode === 48) {
+
+    // Flat grey gradient — fog reduces all colour and contrast.
+    gradient = "linear-gradient(to bottom, #2a2a3a, #7a7a8a)";
+
+  // Check for codes 51 through 67 — all drizzle and rain types.
+  // >= means "greater than or equal to", <= means "less than or equal to".
+  // Both conditions must be true (&&) for this block to run.
+  } else if (weatherCode >= 51 && weatherCode <= 67) {
+
+    // Deep navy to dark blue — feels cold and rainy.
+    gradient = "linear-gradient(to bottom, #0b1630, #1e3a5f)";
+
+  // Check for codes 71 through 77 — all snow types.
+  } else if (weatherCode >= 71 && weatherCode <= 77) {
+
+    // Dark blue fading to pale icy blue — feels wintry and cold.
+    gradient = "linear-gradient(to bottom, #1a2a4a, #b0c4de)";
+
+  // Check for codes 80 through 82 — rain showers.
+  } else if (weatherCode >= 80 && weatherCode <= 82) {
+
+    // Navy to medium blue — heavier feel than the drizzle gradient.
+    gradient = "linear-gradient(to bottom, #0b1630, #2e4a6a)";
+
+  // Check for code 95 or higher — thunderstorms with or without hail.
+  // >= 95 catches both 95 and 96 (and any future storm codes).
+  } else if (weatherCode >= 95) {
+
+    // Near-black gradient — dark and dramatic for thunderstorms.
+    gradient = "linear-gradient(to bottom, #0a0a1a, #1a1a2e)";
+
+  // Default — runs if the code did not match any condition above.
+  // Catches unknown codes or anything not listed.
+  } else {
+
+    // Plain dark navy — the original page background colour.
+    // Using a solid colour here keeps the page looking correct
+    // even for codes we have not specifically handled.
+    gradient = "#0b1630";
+
+  }
+
+  // ----------------------------------------------------------
+  // STEP 2: Apply the chosen gradient to the page background.
+  //
+  // document.body is the <body> element of the page.
+  // .style.background lets us set a CSS background value directly
+  // from JavaScript — the same as writing it in style.css.
+  // ----------------------------------------------------------
+
+  // Apply the gradient (or solid colour) to the entire page background.
+  document.body.style.background = gradient;
+
+  // Add a smooth CSS transition so the background fades gradually
+  // instead of snapping instantly to the new colour.
+  // "background 0.8s ease" means: animate the background property
+  // over 0.8 seconds using a smooth ease curve.
+  document.body.style.transition = "background 0.8s ease";
+
+  // Log confirmation and the gradient that was applied.
+  console.log("setBackground() applied:", gradient);
+
+}
+// End of setBackground function.
