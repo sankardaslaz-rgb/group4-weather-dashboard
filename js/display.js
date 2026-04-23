@@ -16,6 +16,69 @@
 
 
 // ============================================================
+// SHARED STATE VARIABLES
+//
+// These variables live OUTSIDE all functions so every function
+// in this file can read and update them.
+// This is called "module-level" or "global" state.
+// ============================================================
+
+// Tracks which unit the user currently wants to see.
+// Starts as "C" for Celsius — switches to "F" when toggled.
+// "let" is used instead of "const" because this value changes.
+let currentUnit = "C";
+
+// Stores the last temperature we received from the API in Celsius.
+// We save the raw Celsius value so we can convert it any time
+// the unit is toggled — without needing to call the API again.
+// Starts at 0 as a safe default before any data arrives.
+let lastTempCelsius = 0;
+
+// Stores the full hourly data object from the last API call.
+// We save it here so the unit toggle can redraw the chart
+// in the new unit without fetching from the API again.
+// Starts as null — means "no data yet".
+let lastHourlyData = null;
+
+
+// ============================================================
+// FUNCTION: convertTemp(celsius, unit)
+//
+// Converts a Celsius temperature to the requested unit.
+// Returns the original Celsius value if unit is "C".
+// Returns a rounded Fahrenheit value if unit is "F".
+//
+// How to call it:
+//   convertTemp(21.4, "C")  → 21.4
+//   convertTemp(21.4, "F")  → 70
+//
+// The formula for Celsius to Fahrenheit is: (°C × 9/5) + 32
+// Math.round() removes the decimal so it shows as a whole number.
+// ============================================================
+
+// "celsius" is the raw temperature number, e.g. 21.4
+// "unit"    is the string "C" or "F"
+function convertTemp(celsius, unit) {
+
+  // Check if the user wants Fahrenheit.
+  if (unit === "F") {
+
+    // Apply the conversion formula and round to nearest whole number.
+    // 9/5 is 1.8 — multiplying by it scales Celsius to the F range.
+    // Adding 32 shifts the scale to match the Fahrenheit baseline.
+    // Example: (21.4 × 9/5) + 32 = 70.52 → Math.round → 71
+    return Math.round((celsius * 9 / 5) + 32);
+
+  }
+
+  // If unit is "C" (or anything else), return the value unchanged.
+  // We still round it so the display is always a whole number.
+  return Math.round(celsius);
+
+}
+
+
+// ============================================================
 // FUNCTION: renderCurrent(data)
 //
 // This function receives the full weather data object returned
@@ -46,6 +109,12 @@ function renderCurrent(data) {
   // The dot (.) is how we reach inside an object to get a value.
   // Example result: 21.4
   const temperature = data.current.temperature_2m;
+
+  // Save the raw Celsius temperature into our shared variable.
+  // We store it here so the unit toggle can convert it later
+  // without needing to call the API again.
+  // lastTempCelsius is defined at the top of this file.
+  lastTempCelsius = temperature;
 
   // Read the current wind speed from the data object.
   // wind_speed_10m means wind speed measured at 10 metres above ground.
@@ -95,22 +164,34 @@ function renderCurrent(data) {
   // cleanly using ${variableName} — much neater than joining with +.
   // ----------------------------------------------------------
 
+  // Convert the temperature to whichever unit is currently active.
+  // convertTemp() is defined above — it handles C→F if needed.
+  // currentUnit is "C" or "F" depending on what the user toggled.
+  const displayTemp = convertTemp(temperature, currentUnit);
+
+  // Build the unit label string to show after the number.
+  // If currentUnit is "F" we show "°F", otherwise we show "°C".
+  const unitLabel = currentUnit === "F" ? "°F" : "°C";
+
   // Find the element with id="temperature" in index.html.
-  // Set its text to the temperature number followed by "°C".
-  // Example result on page: "21.4°C"
-  document.getElementById("temperature").textContent = `${temperature}°C`;
+  // Set its text to the converted temperature plus the unit label.
+  // Example: "21°C" when in Celsius, "70°F" when in Fahrenheit.
+  document.getElementById("temperature").textContent = `${displayTemp}${unitLabel}`;
 
   // Find the element with id="wind-speed" in index.html.
   // Set its text to include the "Wind:" label and "km/h" unit.
   // Example result on page: "Wind: 13.2 km/h"
   document.getElementById("wind-speed").textContent = `Wind: ${windSpeed} km/h`;
 
+  // Look up the weather code in weather-codes.js to get description + emoji.
+  // getWeatherInfo() is defined in weather-codes.js which loads first.
+  // It returns an object like { description: "Partly cloudy", icon: "⛅" }.
+  const weatherInfo = getWeatherInfo(weatherCode);
+
   // Find the element with id="condition" in index.html.
-  // For now we just show the raw weather code number.
-  // On Day 3, Member 3 will replace this line with a lookup into
-  // the weatherDescriptions object to show text like "Partly cloudy ⛅".
-  // Example result on page: "Weather code: 3"
-  document.getElementById("condition").textContent = `Weather code: ${weatherCode}`;
+  // Show the emoji icon followed by the text description.
+  // Example result on page: "⛅ Partly cloudy"
+  document.getElementById("condition").textContent = `${weatherInfo.icon} ${weatherInfo.description}`;
 
   // Print a confirmation message so we know the function finished
   // without any errors. If you see this in the console, it worked!
@@ -337,15 +418,27 @@ function renderForecast(daily) {
 //
 // How to call it from app.js:
 //   const data = await fetchWeather(lat, lon);
-//   renderChart(data.hourly);
+//   renderChart(data.hourly, "C");   // pass "C" or "F" as second argument
 // ============================================================
 
 // "function" creates a reusable block named renderChart.
-// "hourly" is the parameter — receives data.hourly from the API.
-function renderChart(hourly) {
+// "hourly" is the raw hourly data object from the API.
+// "unit" is a new second parameter — either "C" or "F".
+//   If not passed in, it defaults to currentUnit automatically.
+function renderChart(hourly, unit) {
+
+  // If no unit argument was passed, use whatever currentUnit is set to.
+  // This handles cases where renderChart is called with just one argument.
+  // The logical OR (||) means: use "unit" if it has a value, else use currentUnit.
+  unit = unit || currentUnit;
+
+  // Save the hourly data into the shared variable at the top of this file.
+  // This lets the unit toggle button call renderChart again later
+  // with the same data but a different unit — no API call needed.
+  lastHourlyData = hourly;
 
   // Print a divider so we can easily spot this in the console.
-  console.log("--- renderChart() called ---");
+  console.log("--- renderChart() called --- unit:", unit);
 
   // ----------------------------------------------------------
   // STEP 1: Find the chart container and clear it.
@@ -409,15 +502,38 @@ function renderChart(hourly) {
   console.log("Hours found for today:", todayIndexes.length);
 
   // ----------------------------------------------------------
-  // STEP 4: Collect today's temperatures into their own array.
-  // We need this to calculate the maximum temperature, which
-  // is used to set the proportional height of each bar.
+  // STEP 4: Collect today's raw Celsius temperatures.
+  // Then convert them to the correct unit using .map().
   // ----------------------------------------------------------
 
-  // .map() creates a new array by transforming each item.
-  // For each index in todayIndexes, we grab the matching temperature.
-  // Result: an array of 24 temperature numbers, e.g. [16.1, 15.8, ...]
-  const todayTemps = todayIndexes.map(i => hourly.temperature_2m[i]);
+  // First collect the raw Celsius values for today.
+  // .map() creates a new array — for each index grab the temperature.
+  // Result: 24 Celsius numbers, e.g. [16.1, 15.8, 17.2, ...]
+  const todayCelsius = todayIndexes.map(i => hourly.temperature_2m[i]);
+
+  // Now convert every temperature in the array to the selected unit.
+  // .map() loops through each Celsius value (we call it "t") and
+  // applies the conversion formula if unit is "F".
+  // If unit is "C", we keep the original value unchanged.
+  // Math.round() removes decimals so labels show clean whole numbers.
+  // Example input:  [16.1, 15.8, 17.2]
+  // Example output (°F): [61, 61, 63]
+  // Example output (°C): [16, 16, 17]
+  const todayTemps = todayCelsius.map(function(t) {
+
+    // Check which unit we are converting to.
+    if (unit === "F") {
+
+      // Apply Celsius → Fahrenheit formula and round to whole number.
+      // (t * 9/5) + 32 is the standard conversion formula.
+      return Math.round((t * 9 / 5) + 32);
+
+    }
+
+    // For Celsius just round — the value stays the same scale.
+    return Math.round(t);
+
+  });
 
   // Math.max(...todayTemps) finds the highest temperature in the array.
   // The "..." (spread operator) unpacks the array into individual arguments
@@ -426,7 +542,7 @@ function renderChart(hourly) {
   const maxTemp = Math.max(...todayTemps);
 
   // Log the max temperature so we can verify the bar heights make sense.
-  console.log("Max temperature today:", maxTemp);
+  console.log("Max temperature today:", maxTemp, unit);
 
   // ----------------------------------------------------------
   // STEP 5: Create the wrapper div that holds all the bars.
@@ -466,11 +582,13 @@ function renderChart(hourly) {
   for (let j = 0; j < todayIndexes.length; j++) {
 
     // Get the original array index for this hour.
-    // We need it to look up the correct time and temperature.
+    // We need it to look up the correct time string.
     const i = todayIndexes[j];
 
-    // Get the temperature for this specific hour. Example: 21.4
-    const temp = hourly.temperature_2m[i];
+    // Get the CONVERTED temperature for this hour from todayTemps.
+    // todayTemps was already converted to °C or °F above using .map().
+    // j is the position in todayTemps — it matches the loop counter.
+    const temp = todayTemps[j];
 
     // Get the time string for this hour. Example: "2025-06-03T14:00"
     const timeString = hourly.time[i];
@@ -529,7 +647,8 @@ function renderChart(hourly) {
 
     // Add a tooltip so the user can hover over a bar to see the exact temp.
     // title is a standard HTML attribute that shows on hover.
-    bar.title = `${temp}°C`;
+    // We show the correct unit label (°C or °F) based on current unit.
+    bar.title = `${temp}°${unit}`;
 
     // --------------------------------------------------------
     // Build the label span — the hour text below the bar.
@@ -694,3 +813,71 @@ function setBackground(weatherCode) {
 
 }
 // End of setBackground function.
+
+// ============================================================
+// UNIT TOGGLE EVENT LISTENER
+//
+// Listens for a click on the id="unit-toggle" button.
+// When clicked it flips currentUnit between "C" and "F",
+// updates the button label, and re-displays the temperature
+// using the stored lastTempCelsius — no API call needed.
+//
+// This runs as soon as display.js loads because the button
+// already exists in the HTML by the time scripts execute.
+// ============================================================
+
+// Find the unit toggle button in the HTML by its id.
+const unitToggleBtn = document.getElementById("unit-toggle");
+
+// Attach a click event listener to the toggle button.
+// The function inside runs every time the button is clicked.
+unitToggleBtn.addEventListener("click", function() {
+
+  // Log that the toggle was clicked so we can track it in DevTools.
+  console.log("Unit toggle clicked. Current unit was:", currentUnit);
+
+  // Flip currentUnit between "C" and "F".
+  // The ternary operator works like a one-line if/else:
+  //   condition ? valueIfTrue : valueIfFalse
+  // If currentUnit is "C", switch to "F". If it is "F", switch to "C".
+  currentUnit = currentUnit === "C" ? "F" : "C";
+
+  // Log the new unit so we can confirm it switched correctly.
+  console.log("Unit is now:", currentUnit);
+
+  // Convert the stored Celsius temperature to the newly selected unit.
+  // lastTempCelsius holds the raw value saved by renderCurrent().
+  // convertTemp() handles the maths — returns Celsius or Fahrenheit.
+  const converted = convertTemp(lastTempCelsius, currentUnit);
+
+  // Build the correct unit label string: "°C" or "°F".
+  // Again using a ternary — short and readable.
+  const unitLabel = currentUnit === "F" ? "°F" : "°C";
+
+  // Update the temperature element on the page with the new value.
+  // No API call — we just recalculate from the stored Celsius number.
+  // Example: switches from "21°C" to "70°F" instantly.
+  document.getElementById("temperature").textContent = `${converted}${unitLabel}`;
+
+  // Update the button text so it always shows what the NEXT click will do.
+  // If we just switched TO Fahrenheit, the button should say "Switch to °C".
+  // If we just switched TO Celsius, the button should say "Switch to °F".
+  unitToggleBtn.textContent = currentUnit === "F" ? "Switch to °C" : "Switch to °F";
+
+  // Log confirmation that the display was updated.
+  console.log("Temperature updated to:", converted + unitLabel);
+
+  // Redraw the hourly chart in the new unit.
+  // lastHourlyData holds the raw hourly object saved by renderChart()
+  // the last time it was called — so we do not need to fetch again.
+  // We only redraw if lastHourlyData is not null (i.e. data has loaded).
+  if (lastHourlyData !== null) {
+
+    // Call renderChart again with the saved hourly data and new unit.
+    // It will re-convert all 24 temperatures and rebuild all the bars.
+    renderChart(lastHourlyData, currentUnit);
+
+  }
+
+});
+// End of unit toggle event listener.

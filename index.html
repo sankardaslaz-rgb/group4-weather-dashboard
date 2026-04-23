@@ -72,9 +72,19 @@
     <!-- End #search-container -->
 
     <!-- Search results appear here after a city is searched.
-         JavaScript (display.js) will inject clickable city buttons
+         JavaScript (app.js) will inject clickable city buttons
          into this div. It starts empty on purpose. -->
     <div id="search-results"></div>
+
+    <!-- Loading message shown while locating the user or fetching data.
+         Starts hidden (display:none). JavaScript shows and hides it.
+         e.g. "Locating you..." or "Loading weather..." -->
+    <p id="loading" style="display:none; color:#aaa; text-align:center; font-style:italic;"></p>
+
+    <!-- Error message shown when geolocation fails or city is not found.
+         Starts hidden (display:none). JavaScript shows it when needed.
+         e.g. "Location access denied. Please search for a city." -->
+    <p id="error-msg" style="display:none; color:#f5a742; text-align:center;"></p>
 
   </header>
   <!-- End header -->
