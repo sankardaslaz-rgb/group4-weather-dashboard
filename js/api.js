@@ -1,15 +1,14 @@
 // js/api.js
 // ============================================================
-// This file handles ALL communication with the weather APIs.
-// It fetches raw data from the internet and returns it to
-// other files (like display.js and app.js) to show on screen.
-//
-// It also manages loading and error states directly so the
-// user always sees feedback while waiting or when things fail.
-//
-// Functions in this file:
-//   fetchWeather(lat, lon)  → fetches current + forecast + hourly data
-//   fetchGeocode(cityName)  → converts a city name to coordinates
+// This file is responsible for all communication between the
+// weather dashboard and the two external APIs it depends on.
+// It contains two functions: fetchWeather() which retrieves
+// live temperature, wind, forecast, and hourly data for any
+// coordinates, and fetchGeocode() which converts a city name
+// into the latitude and longitude the weather API needs.
+// Both functions manage the loading spinner and error messages
+// so that app.js and display.js never have to handle failed
+// network requests themselves.
 // ============================================================
 
 
@@ -133,6 +132,12 @@ function clearApiError() {
 // "async" tells JavaScript this function contains await steps.
 // "lat" and "lon" are the coordinates of the location to fetch.
 async function fetchWeather(lat, lon) {
+
+  // Print the exact coordinates being requested so we can confirm
+  // the right location is being fetched during the demo.
+  // This appears in DevTools before any network request is made.
+  // Example output: "Fetching weather for:  lat: 48.85  lon: 2.35"
+  console.log("Fetching weather for: ", "lat:", lat, " lon:", lon);
 
   // Clear any error message left over from a previous failed fetch.
   // We do this first so the user sees a clean state before loading.

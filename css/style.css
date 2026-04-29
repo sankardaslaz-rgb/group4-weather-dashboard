@@ -567,52 +567,317 @@ h2 {
 
 /* ============================================================
    MEDIA QUERY — screens narrower than 600px (phones)
-   A media query says: only apply these styles IF the screen
-   is smaller than 600px wide. Inside, we override the rules
-   above to make everything touch-friendly and stacked.
+
+   A media query is a CSS rule that only activates when the
+   screen width matches the condition. Think of it as:
+   "Only apply these styles IF the screen is 600px wide or less."
+
+   Everything inside the { } overrides the desktop styles above.
+   We use this to make the layout comfortable on a phone screen.
    ============================================================ */
 @media (max-width: 600px) {
 
-  /* Less padding on mobile so content is not squished */
+  /* Add padding around the entire page body on mobile.
+     Without this, content presses right up against the screen edges. */
+  body {
+    padding: 1rem;
+  }
+
+  /* Less padding on the header so the search bar has more room. */
   header {
     padding: 1rem;
   }
 
-  /* Less side padding inside main on mobile */
+  /* Less side padding inside main on mobile so cards use the full width. */
   main {
     padding: 0 1rem 2rem;
   }
 
-  /* Smaller city name so it fits on a narrow screen */
+  /* Reduce the city name font size so it fits on a narrow screen.
+     The desktop size (2.5rem) would overflow on a 375px phone. */
   #city-name {
     font-size: 1.8rem;
   }
 
-  /* Slightly smaller temperature on mobile */
+  /* Reduce the temperature number on mobile.
+     2.5rem is still large and readable but does not overflow. */
   #temperature {
-    font-size: 3rem;
+    font-size: 2.5rem;
   }
 
-  /* Stack the search input and button vertically on small screens */
+  /* Stack the search input and button vertically instead of side by side.
+     flex-direction: column makes children sit on top of each other. */
   #search-container {
     flex-direction: column;
   }
 
-  /* Make the button full width when stacked */
+  /* Make the search text input fill the full width of its container.
+     width: 100% means it stretches edge to edge — easier to tap on mobile. */
+  #search-input {
+    width: 100%;
+  }
+
+  /* Make the search button fill the full width too.
+     This way both elements are the same width when stacked vertically. */
   #search-btn {
     width: 100%;
   }
 
-  /* Slightly narrower forecast cards so more fit without scrolling */
+  /* Switch the forecast row from a horizontal flex row to a 2-column grid.
+     display: grid organises children into rows and columns automatically.
+     grid-template-columns: 1fr 1fr means two equal-width columns side by side.
+     On mobile this is easier to read than a tiny scrolling row of 7 cards. */
+  #forecast-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    /* gap adds space between every grid cell — both rows and columns. */
+    gap: 10px;
+
+    /* Turn off horizontal scrolling — the grid wraps instead. */
+    overflow-x: visible;
+  }
+
+  /* Let each forecast card fill its grid cell naturally.
+     Removing min-width lets the grid control the card size. */
   .forecast-card {
-    min-width: 80px;
+    min-width: unset;
     padding: 0.75rem 0.5rem;
   }
 
-  /* Shorter chart on mobile to leave room for other content */
+  /* Shorter chart area on mobile to leave more room for other content. */
   #chart-container {
     height: 120px;
   }
 
 }
-/* End media query */
+/* End of 600px media query */
+
+
+/* ============================================================
+   MEDIA QUERY — screens narrower than 400px (very small phones)
+
+   This targets the smallest phones like older iPhones or budget
+   Android devices. We reduce font sizes further and switch the
+   forecast to a single column so nothing feels cramped.
+
+   These rules only apply when the screen is 400px or less —
+   they stack on top of the 600px rules above.
+   ============================================================ */
+@media (max-width: 400px) {
+
+  /* Shrink the city name further — 1.4rem is still clear but compact. */
+  #city-name {
+    font-size: 1.4rem;
+  }
+
+  /* Reduce the temperature number to fit very narrow screens. */
+  #temperature {
+    font-size: 2rem;
+  }
+
+  /* Reduce the condition text slightly — it can be long on small screens. */
+  #condition {
+    font-size: 0.85rem;
+  }
+
+  /* Reduce the wind speed text to match the condition size. */
+  #wind-speed {
+    font-size: 0.85rem;
+  }
+
+  /* Switch forecast to a single column on the smallest screens.
+     Two columns at 400px or less would make each card too narrow to read.
+     1fr means the one column takes up the full available width. */
+  #forecast-container {
+    grid-template-columns: 1fr;
+  }
+
+  /* Reduce the section headings (7-Day Forecast, Today Hourly) slightly. */
+  h2 {
+    font-size: 0.9rem;
+  }
+
+  /* Make the unit toggle button full width — easier to tap on tiny screens. */
+  #unit-toggle {
+    width: 100%;
+
+    /* Centre the button text now that it spans the full width. */
+    text-align: center;
+  }
+
+}
+/* End of 400px media query */
+
+
+/* ============================================================
+   DEMO POLISH ADDITIONS
+   These rules improve the visual appearance of the forecast
+   cards and hourly chart for a cleaner demo presentation.
+   ============================================================ */
+
+
+/* ============================================================
+   .FORECAST-CARD HOVER EFFECT
+   Adds a smooth brightness increase and upward lift when the
+   user moves their mouse over any forecast card.
+
+   "transition" is the key property — it tells the browser to
+   animate the change in "background" and "transform" smoothly
+   over 0.2 seconds instead of snapping instantly.
+   ============================================================ */
+
+/* The base card already has a semi-transparent background.
+   We add transition here so the hover animation is smooth. */
+.forecast-card {
+  /* Animate both background colour and vertical position changes.
+     "ease" means it starts slow, speeds up, then slows at the end. */
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* This rule only applies when the mouse is hovering over the card.
+   The colon after .forecast-card means "when this state is active". */
+.forecast-card:hover {
+  /* Brighter semi-transparent white — 0.1 is more visible than the
+     base 0.05, making the card appear to glow slightly on hover. */
+  background: rgba(255, 255, 255, 0.1);
+
+  /* translateY(-4px) moves the card 4 pixels upward.
+     Combined with the background change, this creates a "lift"
+     effect that tells the user the card is interactive. */
+  transform: translateY(-4px);
+
+  /* Change the cursor to a hand pointer so the user knows
+     they can interact with the card. */
+  cursor: pointer;
+}
+
+
+/* ============================================================
+   #CHART-CONTAINER SCROLLBAR
+   The hourly chart has 24 bars which are often wider than the
+   screen. overflow-x: auto lets it scroll sideways.
+   We style the scrollbar to be thin and subtle so it does not
+   clash with the dark dashboard design.
+   ============================================================ */
+
+/* Enable sideways scrolling on the chart container.
+   "auto" means the scrollbar only appears when the content
+   is actually wider than the container — not always visible. */
+#chart-container {
+  overflow-x: auto;
+
+  /* Add a small gap above the chart so the ::before label
+     has room to breathe above the bars. */
+  padding-top: 1.5rem;
+
+  /* position: relative is required for the ::before pseudo-element
+     to be positioned correctly inside this container. */
+  position: relative;
+}
+
+/* Style the scrollbar track (the background channel the thumb slides in).
+   ::-webkit-scrollbar targets Chrome, Edge, and Safari browsers. */
+#chart-container::-webkit-scrollbar {
+  /* A very thin 4px scrollbar — barely visible but still usable. */
+  height: 4px;
+}
+
+/* Style the scrollbar track — the empty part behind the thumb. */
+#chart-container::-webkit-scrollbar-track {
+  /* Dark semi-transparent track blends with the dashboard background. */
+  background: rgba(255, 255, 255, 0.05);
+
+  /* Match the card border-radius so it looks integrated. */
+  border-radius: 2px;
+}
+
+/* Style the scrollbar thumb — the draggable part the user grabs. */
+#chart-container::-webkit-scrollbar-thumb {
+  /* Slightly brighter than the track so the user can see it. */
+  background: rgba(255, 255, 255, 0.2);
+
+  /* Fully rounded ends give it a pill shape. */
+  border-radius: 2px;
+}
+
+/* Make the thumb brighter when the user hovers over it. */
+#chart-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+
+/* ============================================================
+   #CHART-CONTAINER ::before LABEL
+   A CSS pseudo-element that adds a text label ("Today's hourly
+   temperature") above the chart WITHOUT changing the HTML.
+
+   ::before inserts a virtual element as the FIRST child inside
+   the selected element. We use it here so no JavaScript or HTML
+   changes are needed — pure CSS does the work.
+   ============================================================ */
+
+/* ::before creates a virtual first child inside #chart-container. */
+#chart-container::before {
+  /* "content" is the text the pseudo-element displays.
+     Without this property the element is invisible. */
+  content: "Today's hourly temperature";
+
+  /* Display as block so it sits on its own line above the bars. */
+  display: block;
+
+  /* Small label text — same size as the section headings above. */
+  font-size: 0.75rem;
+
+  /* Muted grey — matches the style of other secondary labels. */
+  color: #aaaaaa;
+
+  /* All caps with wide letter spacing gives it a clean label feel. */
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  /* Space below the label before the bars start. */
+  margin-bottom: 0.5rem;
+
+  /* Position at the very top of the container.
+     position: absolute combined with top: 0 pins it above the bars.
+     This requires #chart-container to have position: relative (set above). */
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+
+/* ============================================================
+   FOOTER
+   The credit line at the very bottom of the page.
+   Kept small and subtle so it does not compete with the data.
+   ============================================================ */
+footer {
+  /* Centre the credit text horizontally. */
+  text-align: center;
+
+  /* Small muted text — secondary information. */
+  font-size: 0.75rem;
+  color: #555555;
+
+  /* Space above the footer so it does not press against the chart. */
+  margin-top: 3rem;
+
+  /* Space below so it does not sit right at the screen edge. */
+  padding-bottom: 2rem;
+}
+
+/* Style the Open-Meteo link inside the footer. */
+footer a {
+  /* Matching muted colour — subtle but still clearly a link. */
+  color: #4a90d9;
+
+  /* Remove the default underline for a cleaner look. */
+  text-decoration: none;
+}
+
+/* Underline the link only on hover so the user knows it is clickable. */
+footer a:hover {
+  text-decoration: underline;
+}

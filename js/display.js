@@ -1,17 +1,14 @@
 // js/display.js
 // ============================================================
-// This file handles everything the USER SEES on screen.
-// It takes raw data from api.js and puts it into the HTML.
-//
-// Think of it like this:
-//   api.js    = goes to the internet and gets the weather data
-//   display.js = takes that data and writes it onto the page
-//
-// Functions in this file:
-//   renderCurrent(data)      → updates current weather on screen
-//   renderForecast(daily)    → builds the 7-day forecast cards
-//   renderChart(hourly)      → draws the hourly temperature bar chart
-//   setBackground(code)      → changes page background based on weather
+// This file is responsible for everything the user sees on
+// screen — it takes the raw weather data returned by api.js
+// and writes it into the HTML elements on the page.
+// It contains four functions: renderCurrent() for live stats,
+// renderForecast() for the 7-day cards, renderChart() for the
+// hourly bar chart, and setBackground() for the page gradient.
+// It also stores shared state (currentUnit, lastTempCelsius,
+// lastHourlyData) so the unit toggle can update the display
+// instantly without making a new API call.
 // ============================================================
 
 
@@ -44,16 +41,23 @@ let lastHourlyData = null;
 // ============================================================
 // FUNCTION: convertTemp(celsius, unit)
 //
-// Converts a Celsius temperature to the requested unit.
-// Returns the original Celsius value if unit is "C".
-// Returns a rounded Fahrenheit value if unit is "F".
+// WHAT IT DOES:
+//   Converts a raw Celsius number into the unit the user has
+//   selected. Returns a rounded whole number in either °C or °F.
 //
-// How to call it:
-//   convertTemp(21.4, "C")  → 21
-//   convertTemp(21.4, "F")  → 70
+// INPUTS:
+//   celsius → a number from the API, e.g. 21.4
+//   unit    → the string "C" or "F"
 //
-// The formula for Celsius to Fahrenheit is: (°C × 9/5) + 32
-// Math.round() removes the decimal so it shows as a whole number.
+// OUTPUT:
+//   A rounded integer. Examples:
+//     convertTemp(21.4, "C") → 21
+//     convertTemp(21.4, "F") → 70
+//
+// WHY WE NEED IT:
+//   The API always returns temperatures in Celsius. When the
+//   user clicks "Switch to °F" we call this function to convert
+//   the stored value without fetching from the API again.
 // ============================================================
 
 // "celsius" is the raw temperature number, e.g. 21.4
@@ -81,12 +85,37 @@ function convertTemp(celsius, unit) {
 // ============================================================
 // FUNCTION: renderCurrent(data)
 //
-// This function receives the full weather data object returned
-// by fetchWeather() in api.js, reads the values we need,
-// and updates the matching elements on the HTML page.
+// WHAT IT DOES:
+//   Reads the current weather values from the API data object
+//   and writes them into the matching HTML elements on the page.
+//   Also saves the raw Celsius temperature for the unit toggle.
+//
+// INPUT:
+//   data → the full object returned by fetchWeather() in api.js.
+//   The values it reads are:
+//     data.current.temperature_2m   → e.g. 21.4  (current temp °C)
+//     data.current.wind_speed_10m   → e.g. 13.2  (wind in km/h)
+//     data.current.weather_code     → e.g. 3     (WMO code number)
+//
+// HOW TO CALL IT:
+//   const data = await fetchWeather(lat, lon);
+//   renderCurrent(data);
+//
+// WHAT IT UPDATES ON THE PAGE:
+//   id="temperature" → e.g. "21°C" or "70°F"
+//   id="wind-speed"  → e.g. "Wind: 13.2 km/h"
+//   id="condition"   → e.g. "⛅ Partly cloudy"
 // ============================================================
 
 function renderCurrent(data) {
+
+  // ── DEMO LOG ──────────────────────────────────────────────
+  // This single line prints the entire data object in DevTools
+  // so during the demo you can expand it and show the raw API
+  // response that this function is about to turn into visible text.
+  // Click the ▶ arrow next to "Object" in the console to explore it.
+  console.log("Rendering current weather:", data);
+  // ──────────────────────────────────────────────────────────
 
   // Read the current temperature from the data object.
   const temperature = data.current.temperature_2m;
@@ -135,8 +164,37 @@ function renderCurrent(data) {
 // ============================================================
 // FUNCTION: renderForecast(daily)
 //
-// Builds 7 forecast cards and injects them into the page
-// inside the element with id="forecast-container".
+// PLAIN ENGLISH:
+//   Imagine printing 7 sticky notes — one for each day of the
+//   week — and sticking them in a row on the page. That is
+//   exactly what this function does. It takes the 7-day forecast
+//   data from the API, loops through each day one at a time,
+//   builds a small card div for that day, and adds it to the
+//   forecast row on the page. It uses getWeatherInfo() to look
+//   up the emoji and description for each day's weather code.
+//   Before building new cards it always wipes the old ones, so
+//   switching cities never shows stale data underneath.
+//
+// WHAT IT DOES:
+//   Builds 7 forecast cards (one per day) and adds them into
+//   the element with id="forecast-container" on the page.
+//   Clears the container first so old cards never stack up.
+//
+// INPUT:
+//   daily → the daily section of the API response object.
+//   The arrays it reads are:
+//     daily.time               → ["2025-06-01", "2025-06-02", ...]
+//     daily.weather_code       → [3, 61, 0, 2, 80, 1, 45]
+//     daily.temperature_2m_max → [24.1, 19.3, 22.0, ...]
+//     daily.temperature_2m_min → [14.2, 11.8, 13.5, ...]
+//
+// HOW TO CALL IT:
+//   const data = await fetchWeather(lat, lon);
+//   renderForecast(data.daily);
+//
+// WHAT IT CREATES ON THE PAGE:
+//   7 divs with class="forecast-card" inside #forecast-container.
+//   Each card shows: day name, weather emoji, high temp, low temp.
 // ============================================================
 
 function renderForecast(daily) {
@@ -216,12 +274,39 @@ function renderForecast(daily) {
 // ============================================================
 // FUNCTION: renderChart(hourly, unit)
 //
-// Draws a simple bar chart of today's hourly temperatures.
-// Each bar shows the temperature number above it, the bar
-// itself, and the hour label below it.
+// PLAIN ENGLISH:
+//   Think of a classic bar chart where taller bars mean higher
+//   temperatures. This function builds that chart using only
+//   HTML divs — no chart library at all. It first filters the
+//   API's 168-hour array down to just today's 24 hours, then
+//   calculates how tall each bar should be by comparing each
+//   temperature to the day's maximum (the hottest hour always
+//   reaches the top). It creates one column per hour, each
+//   containing a yellow temperature label on top, a blue bar
+//   in the middle, and a grey time label below. The whole
+//   chart scrolls sideways if it does not fit on the screen.
+//   When the unit is toggled it redraws instantly using the
+//   stored lastHourlyData — no extra API call needed.
 //
-// NEW: tempLabel shows the temperature number above every bar
-//      so the user does not need to hover to read values.
+// WHAT IT DOES:
+//   Draws a bar chart of today's hourly temperatures using only
+//   HTML divs and CSS — no external chart library needed.
+//   Each column shows the temperature above the bar and the
+//   hour label below it. Bars are proportional to the max temp.
+//
+// INPUTS:
+//   hourly → the hourly section of the API response object.
+//     hourly.time           → ["2025-06-01T00:00", ...] (168 entries)
+//     hourly.temperature_2m → [16.1, 15.8, 15.2, ...]  (168 values)
+//   unit   → "C" or "F". If not passed, falls back to currentUnit.
+//
+// HOW TO CALL IT:
+//   const data = await fetchWeather(lat, lon);
+//   renderChart(data.hourly, "C");
+//
+// WHAT IT CREATES ON THE PAGE:
+//   24 bar columns inside #chart-container, one per hour of today.
+//   Each column: temperature label (yellow) → bar (blue) → time label.
 // ============================================================
 
 function renderChart(hourly, unit) {
@@ -380,7 +465,26 @@ function renderChart(hourly, unit) {
 // ============================================================
 // FUNCTION: setBackground(weatherCode)
 //
-// Changes the page background gradient based on the weather.
+// WHAT IT DOES:
+//   Changes the entire page background to a gradient that
+//   visually matches the current weather condition.
+//   Applied directly to document.body so it covers the full page.
+//   A 0.8s CSS transition makes the change fade in smoothly.
+//
+// INPUT:
+//   weatherCode → a WMO weather code number from the API, e.g. 95.
+//   The ranges it handles:
+//     0–1   → clear/sunny  → warm orange gradient
+//     2–3   → cloudy       → blue-grey gradient
+//     45–48 → fog          → flat grey gradient
+//     51–67 → rain         → deep navy gradient
+//     71–77 → snow         → icy blue gradient
+//     80–82 → showers      → mid-blue gradient
+//     95+   → thunderstorm → near-black gradient
+//     other → default dark navy (#0b1630)
+//
+// HOW TO CALL IT:
+//   setBackground(data.current.weather_code);
 // ============================================================
 
 function setBackground(weatherCode) {
